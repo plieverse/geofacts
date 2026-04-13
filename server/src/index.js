@@ -1,6 +1,22 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const db = require('./db');
+
+async function runMigrations() {
+  try {
+    const schema = fs.readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf8');
+    const seed = fs.readFileSync(path.join(__dirname, 'db/seed.sql'), 'utf8');
+    await db.query(schema);
+    await db.query(seed);
+    console.log('Database migraties uitgevoerd.');
+  } catch (err) {
+    console.error('Fout bij database-migraties:', err.message);
+    process.exit(1);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +55,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Er is een interne fout opgetreden.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`GeoFacts server draait op poort ${PORT}`);
+runMigrations().then(() => {
+  app.listen(PORT, () => {
+    console.log(`GeoFacts server draait op poort ${PORT}`);
+  });
 });

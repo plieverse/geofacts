@@ -8,6 +8,8 @@ export default function NewPostModal({ onClose, onCreated }) {
   const [linkUrl, setLinkUrl] = useState('');
   const [linkPreview, setLinkPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +19,8 @@ export default function NewPostModal({ onClose, onCreated }) {
     const url = e.target.value;
     setLinkUrl(url);
     setLinkPreview(null);
+    setPreviewFailed(false);
+    setManualTitle('');
 
     clearTimeout(linkDebounce.current);
     if (!url.trim()) return;
@@ -26,8 +30,10 @@ export default function NewPostModal({ onClose, onCreated }) {
       try {
         const { data } = await api.post('/link-preview', { url: url.trim() });
         setLinkPreview(data);
+        setPreviewFailed(false);
       } catch (_) {
         setLinkPreview(null);
+        setPreviewFailed(true);
       } finally {
         setPreviewLoading(false);
       }
@@ -44,7 +50,7 @@ export default function NewPostModal({ onClose, onCreated }) {
       const { data } = await api.post('/posts', {
         content: content.trim(),
         linkUrl: linkUrl.trim() || null,
-        linkTitle: linkPreview?.title || null,
+        linkTitle: linkPreview?.title || manualTitle.trim() || null,
         linkDescription: linkPreview?.description || null,
         linkImage: linkPreview?.image || null,
         topicIds: selectedTopics,
@@ -109,6 +115,21 @@ export default function NewPostModal({ onClose, onCreated }) {
                 )}
                 {linkPreview.title && <p className="text-sm font-semibold text-text-primary">{linkPreview.title}</p>}
                 {linkPreview.description && <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">{linkPreview.description}</p>}
+              </div>
+            )}
+            {previewFailed && !previewLoading && linkUrl.trim() && (
+              <div className="mt-2 space-y-1.5">
+                <p className="text-xs text-text-secondary">
+                  Automatische preview niet beschikbaar. Voer optioneel een titel in:
+                </p>
+                <input
+                  type="text"
+                  value={manualTitle}
+                  onChange={(e) => setManualTitle(e.target.value)}
+                  placeholder="Bijv: NYT — Iran Blockade Sets Up a Test..."
+                  className="input text-sm"
+                  maxLength={255}
+                />
               </div>
             )}
           </div>

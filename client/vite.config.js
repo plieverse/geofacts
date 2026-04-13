@@ -16,4 +16,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
   },
+  preview: {
+    allowedHosts: ['geofacts-client-production.up.railway.app'],
+  },
 });

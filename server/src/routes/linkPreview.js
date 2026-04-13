@@ -10,7 +10,17 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'URL is verplicht.' });
     }
 
-    const { result, error } = await ogs({ url, timeout: 5000 });
+    const { result, error } = await ogs({
+      url,
+      timeout: 10000,
+      fetchOptions: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+        },
+      },
+    });
 
     if (error) {
       return res.status(422).json({ error: 'Kon geen voorvertoning laden voor deze URL.' });

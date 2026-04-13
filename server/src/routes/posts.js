@@ -254,12 +254,16 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/posts/:id (admin only)
-router.delete('/:id', adminMiddleware, async (req, res) => {
+// DELETE /api/posts/:id (eigen berichten of admin)
+router.delete('/:id', auth, async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    const { rows } = await db.query('DELETE FROM posts WHERE id = $1 RETURNING id', [postId]);
-    if (!rows.length) return res.status(404).json({ error: 'Bericht niet gevonden.' });
+    const { rows: existing } = await db.query('SELECT * FROM posts WHERE id = $1', [postId]);
+    if (!existing.length) return res.status(404).json({ error: 'Bericht niet gevonden.' });
+    if (existing[0].user_id !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Geen toegang om dit bericht te verwijderen.' });
+    }
+    await db.query('DELETE FROM posts WHERE id = $1', [postId]);
     res.json({ message: 'Bericht verwijderd.' });
   } catch (err) {
     console.error('DELETE /posts/:id error:', err);

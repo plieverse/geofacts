@@ -41,7 +41,7 @@ export default function PostCard({ post, onDelete, onUpdate }) {
   const [showEdit, setShowEdit] = useState(false);
 
   const canEdit = user && (user.id === post.user_id || user.is_admin);
-  const canDelete = user && user.is_admin;
+  const canDelete = user && (user.id === post.user_id || user.is_admin);
 
   function handleCardClick(e) {
     // Don't navigate if clicking interactive elements

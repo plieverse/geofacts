@@ -17,6 +17,6 @@ export default defineConfig({
     sourcemap: false,
   },
   preview: {
-    allowedHosts: ['geofacts-client-production.up.railway.app'],
+    allowedHosts: ['geofacts-client-production.up.railway.app', 'www.geofacts.nl', 'geofacts.nl'],
   },
 });

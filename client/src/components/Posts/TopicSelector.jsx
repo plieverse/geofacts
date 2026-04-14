@@ -2,20 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import api from '../../services/api';
 
-const TOPIC_COLORS = [
-  'border-blue-500/50 text-blue-400 bg-blue-500/10',
-  'border-green-500/50 text-green-400 bg-green-500/10',
-  'border-purple-500/50 text-purple-400 bg-purple-500/10',
-  'border-orange-500/50 text-orange-400 bg-orange-500/10',
-  'border-pink-500/50 text-pink-400 bg-pink-500/10',
-  'border-teal-500/50 text-teal-400 bg-teal-500/10',
-  'border-yellow-500/50 text-yellow-400 bg-yellow-500/10',
-  'border-red-500/50 text-red-400 bg-red-500/10',
-  'border-indigo-500/50 text-indigo-400 bg-indigo-500/10',
-  'border-cyan-500/50 text-cyan-400 bg-cyan-500/10',
-];
-function topicColor(id) { return TOPIC_COLORS[(id - 1) % TOPIC_COLORS.length]; }
-
 export default function TopicSelector({ selected, onChange }) {
   const [topics, setTopics] = useState([]);
   const [newTopic, setNewTopic] = useState('');
@@ -62,7 +48,7 @@ export default function TopicSelector({ selected, onChange }) {
             onClick={() => toggleTopic(t.id)}
             className={`topic-chip transition-all ${
               selected.includes(t.id)
-                ? topicColor(t.id) + ' opacity-100'
+                ? 'border-accent/50 text-accent bg-accent/10 opacity-100'
                 : 'border-divider text-text-secondary bg-transparent opacity-60 hover:opacity-100'
             }`}
           >

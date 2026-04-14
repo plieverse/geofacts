@@ -7,22 +7,7 @@ import LinkPreview from './LinkPreview';
 import CommentSection from '../Comments/CommentSection';
 import EditPostModal from '../Posts/EditPostModal';
 
-const TOPIC_COLORS = [
-  'border-blue-500/50 text-blue-400 bg-blue-500/10',
-  'border-green-500/50 text-green-400 bg-green-500/10',
-  'border-purple-500/50 text-purple-400 bg-purple-500/10',
-  'border-orange-500/50 text-orange-400 bg-orange-500/10',
-  'border-pink-500/50 text-pink-400 bg-pink-500/10',
-  'border-teal-500/50 text-teal-400 bg-teal-500/10',
-  'border-yellow-500/50 text-yellow-400 bg-yellow-500/10',
-  'border-red-500/50 text-red-400 bg-red-500/10',
-  'border-indigo-500/50 text-indigo-400 bg-indigo-500/10',
-  'border-cyan-500/50 text-cyan-400 bg-cyan-500/10',
-];
-
-function topicColor(id) {
-  return TOPIC_COLORS[(id - 1) % TOPIC_COLORS.length];
-}
+const TOPIC_CHIP_CLASS = 'border-white/20 text-text-secondary bg-white/5';
 
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -39,6 +24,7 @@ export default function PostCard({ post, onDelete, onUpdate }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [currentTopics, setCurrentTopics] = useState(post.topics || []);
+  const [showComments, setShowComments] = useState((post.comment_count || 0) > 0);
 
   const canEdit = user && (user.id === post.user_id || user.is_admin);
   const canDelete = user && (user.id === post.user_id || user.is_admin);
@@ -121,17 +107,20 @@ export default function PostCard({ post, onDelete, onUpdate }) {
               initialLiked={post.user_liked}
               initialCount={post.like_count || 0}
             />
-            <div className="flex items-center gap-1.5 text-text-secondary">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowComments((v) => !v); }}
+              className={`flex items-center gap-1.5 transition-colors ${showComments ? 'text-accent' : 'text-text-secondary hover:text-accent'}`}
+            >
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm">{post.comment_count || 0}</span>
-            </div>
+            </button>
           </div>
 
           {/* Onderwerpen rechtsonder */}
           {currentTopics?.length > 0 && (
             <div className="flex flex-wrap gap-1 justify-end">
               {currentTopics.map((t) => (
-                <span key={t.id} className={`topic-chip text-xs ${topicColor(t.id)}`}>
+                <span key={t.id} className={`topic-chip text-xs ${TOPIC_CHIP_CLASS}`}>
                   {t.name}
                 </span>
               ))}
@@ -139,10 +128,12 @@ export default function PostCard({ post, onDelete, onUpdate }) {
           )}
         </div>
 
-        {/* Reacties altijd zichtbaar */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <CommentSection postId={post.id} />
-        </div>
+        {/* Reacties: toon alleen als open */}
+        {showComments && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <CommentSection postId={post.id} />
+          </div>
+        )}
       </article>
 
       {showEdit && (

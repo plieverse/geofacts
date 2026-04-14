@@ -112,6 +112,33 @@ router.delete('/posts/:id', async (req, res) => {
   }
 });
 
+// PUT /api/admin/topics/reorder
+router.put('/topics/reorder', async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: 'orderedIds is verplicht.' });
+    }
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
+      for (let i = 0; i < orderedIds.length; i++) {
+        await client.query('UPDATE topics SET sort_order = $1 WHERE id = $2', [i, orderedIds[i]]);
+      }
+      await client.query('COMMIT');
+      res.json({ message: 'Volgorde opgeslagen.' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Admin PUT topics/reorder error:', err);
+    res.status(500).json({ error: 'Volgorde opslaan mislukt.' });
+  }
+});
+
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
   try {

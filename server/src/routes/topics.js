@@ -7,7 +7,7 @@ const adminMiddleware = require('../middleware/admin');
 // GET /api/topics
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM topics ORDER BY name ASC');
+    const { rows } = await db.query('SELECT * FROM topics ORDER BY sort_order ASC, name ASC');
     res.json(rows);
   } catch (err) {
     console.error('GET topics error:', err);

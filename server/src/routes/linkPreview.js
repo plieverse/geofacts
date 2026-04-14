@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const ogs = require('open-graph-scraper');
 
+function isYouTubeUrl(url) {
+  return /youtube\.com\/watch|youtu\.be\//.test(url);
+}
+
+async function fetchYouTubeOEmbed(url) {
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return {
+      title: data.title || null,
+      description: data.author_name ? `Door: ${data.author_name}` : null,
+      image: data.thumbnail_url || null,
+      url,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchWithMicrolink(url) {
   const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=false`);
   if (!response.ok) return null;
@@ -41,6 +61,12 @@ router.post('/', async (req, res) => {
     const { url } = req.body;
     if (!url) {
       return res.status(400).json({ error: 'URL is verplicht.' });
+    }
+
+    // YouTube: gebruik oEmbed API
+    if (isYouTubeUrl(url)) {
+      const preview = await fetchYouTubeOEmbed(url);
+      if (preview?.title) return res.json(preview);
     }
 
     // Probeer eerst Microlink (werkt met NYT, BBC, etc.), daarna OGS als fallback

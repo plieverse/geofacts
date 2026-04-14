@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS comments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Add sort_order to topics if not already present
+ALTER TABLE topics ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

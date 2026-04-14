@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import api from '../../services/api';
 
 export default function AdminTopics() {
@@ -10,6 +10,7 @@ export default function AdminTopics() {
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     api.get('/topics')
@@ -45,13 +46,31 @@ export default function AdminTopics() {
     setAdding(true);
     try {
       const { data } = await api.post('/topics', { name: newName.trim() });
-      setTopics((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+      setTopics((prev) => [...prev, data]);
       setNewName('');
       setShowAdd(false);
     } catch (err) {
       alert(err.response?.data?.error || 'Aanmaken mislukt.');
     } finally {
       setAdding(false);
+    }
+  }
+
+  async function moveItem(index, direction) {
+    const newTopics = [...topics];
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= newTopics.length) return;
+    [newTopics[index], newTopics[swapIndex]] = [newTopics[swapIndex], newTopics[index]];
+    setTopics(newTopics);
+    setReordering(true);
+    try {
+      await api.put('/admin/topics/reorder', { orderedIds: newTopics.map((t) => t.id) });
+    } catch (err) {
+      alert(err.response?.data?.error || 'Volgorde opslaan mislukt.');
+      // Revert
+      setTopics(topics);
+    } finally {
+      setReordering(false);
     }
   }
 
@@ -88,8 +107,28 @@ export default function AdminTopics() {
         </form>
       )}
 
-      {topics.map((t) => (
-        <div key={t.id} className="card p-3 flex items-center gap-3">
+      {topics.map((t, index) => (
+        <div key={t.id} className="card p-3 flex items-center gap-2">
+          {/* Volgorde knoppen */}
+          <div className="flex flex-col gap-0.5">
+            <button
+              onClick={() => moveItem(index, -1)}
+              disabled={index === 0 || reordering || editId === t.id}
+              className="p-0.5 rounded text-text-secondary hover:text-accent hover:bg-accent/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              title="Omhoog"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => moveItem(index, 1)}
+              disabled={index === topics.length - 1 || reordering || editId === t.id}
+              className="p-0.5 rounded text-text-secondary hover:text-accent hover:bg-accent/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              title="Omlaag"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {editId === t.id ? (
             <>
               <input

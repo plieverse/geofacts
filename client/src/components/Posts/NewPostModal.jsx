@@ -21,10 +21,20 @@ export default function NewPostModal({ onClose, onCreated }) {
     setLinkPreview(null);
     setPreviewFailed(false);
 
-    // Alvast domein als suggestie voor handmatige titel
+    // Genereer een betere titelsugggestie: domein + laatste pad-segment
     try {
-      const hostname = new URL(url.trim()).hostname.replace('www.', '');
-      setManualTitle(hostname);
+      const parsed = new URL(url.trim());
+      const hostname = parsed.hostname.replace('www.', '');
+      const segments = parsed.pathname.split('/').filter(Boolean);
+      if (segments.length > 0) {
+        const lastSegment = segments[segments.length - 1]
+          .replace(/\.\w{2,5}$/, '')   // verwijder extensie
+          .replace(/[-_]/g, ' ')        // streepjes naar spaties
+          .replace(/\b\w/g, (c) => c.toUpperCase()); // elk woord hoofdletter
+        setManualTitle(`${hostname} — ${lastSegment}`);
+      } else {
+        setManualTitle(hostname);
+      }
     } catch {
       setManualTitle('');
     }
@@ -145,13 +155,20 @@ export default function NewPostModal({ onClose, onCreated }) {
           <TopicSelector selected={selectedTopics} onChange={setSelectedTopics} />
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
+          {selectedTopics.length === 0 && (
+            <p className="text-text-secondary text-xs">Kies minimaal één onderwerp om te kunnen plaatsen.</p>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary">
               Annuleren
             </button>
-            <button type="submit" disabled={submitting || !content.trim()} className="btn-primary flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={submitting || !content.trim() || selectedTopics.length === 0 || previewLoading}
+              className="btn-primary flex items-center gap-2"
+            >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Plaatsen
             </button>

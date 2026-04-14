@@ -22,6 +22,25 @@ async function fetchYouTubeOEmbed(url) {
   }
 }
 
+async function fetchWithLinkPreviewApi(url) {
+  const apiKey = process.env.LINK_PREVIEW_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const response = await fetch(`https://api.linkpreview.net/?key=${apiKey}&q=${encodeURIComponent(url)}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.title) return null;
+    return {
+      title: data.title || null,
+      description: data.description || null,
+      image: data.image || null,
+      url: data.url || url,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchWithMicrolink(url) {
   const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=false`);
   if (!response.ok) return null;
@@ -69,11 +88,12 @@ router.post('/', async (req, res) => {
       if (preview?.title) return res.json(preview);
     }
 
-    // Probeer eerst Microlink (werkt met NYT, BBC, etc.), daarna OGS als fallback
-    let preview = await fetchWithMicrolink(url);
-    if (!preview?.title) {
-      preview = await fetchWithOgs(url);
-    }
+    // 1. LinkPreview.net API (werkt met NYT, paywalled sites, etc.)
+    let preview = await fetchWithLinkPreviewApi(url);
+    // 2. Microlink als fallback
+    if (!preview?.title) preview = await fetchWithMicrolink(url);
+    // 3. Open Graph Scraper als laatste redmiddel
+    if (!preview?.title) preview = await fetchWithOgs(url);
 
     if (!preview) {
       return res.status(422).json({ error: 'Kon geen voorvertoning laden voor deze URL.' });

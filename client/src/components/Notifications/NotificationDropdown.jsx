@@ -1,6 +1,13 @@
-import React from 'react';
-import { MessageCircle, Heart, FileText, CheckCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, Heart, FileText, CheckCheck, Bell, BellOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  subscribeToPush,
+  unsubscribeFromPush,
+  getExistingSubscription,
+  isPushSupported,
+  getNotificationPermission,
+} from '../../services/pushService';
 
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -26,6 +33,38 @@ export default function NotificationDropdown({ notifications, onMarkAllRead, onM
   const navigate = useNavigate();
   const unread = notifications.filter((n) => !n.is_read);
 
+  const [pushActive, setPushActive] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const pushSupported = isPushSupported();
+
+  useEffect(() => {
+    if (!pushSupported) return;
+    getExistingSubscription().then((sub) => setPushActive(!!sub));
+  }, [pushSupported]);
+
+  async function handleTogglePush() {
+    setPushLoading(true);
+    try {
+      if (pushActive) {
+        await unsubscribeFromPush();
+        setPushActive(false);
+      } else {
+        // Wis de "Niet nu" markering zodat de browser opnieuw kan vragen
+        localStorage.removeItem('geofacts_push_dismissed');
+        await subscribeToPush();
+        setPushActive(true);
+      }
+    } catch (err) {
+      if (getNotificationPermission() === 'denied') {
+        alert('Meldingen zijn geblokkeerd in je browser. Open de site-instellingen (slotje in adresbalk) en zet Meldingen op "Toestaan".');
+      } else {
+        alert(err.message || 'Meldingen in- of uitschakelen mislukt.');
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  }
+
   function handleClick(n) {
     onMarkOneRead(n.id);
     navigate(`/post/${n.post_id}`);
@@ -49,7 +88,7 @@ export default function NotificationDropdown({ notifications, onMarkAllRead, onM
       </div>
 
       {/* List */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-80 overflow-y-auto">
         {notifications.length === 0 ? (
           <div className="px-4 py-8 text-center text-text-secondary text-sm">
             Geen meldingen
@@ -83,6 +122,30 @@ export default function NotificationDropdown({ notifications, onMarkAllRead, onM
           ))
         )}
       </div>
+
+      {/* Push toggle footer */}
+      {pushSupported && (
+        <div className="border-t border-divider px-4 py-2.5">
+          <button
+            onClick={handleTogglePush}
+            disabled={pushLoading}
+            className="flex items-center gap-2 w-full text-xs text-text-secondary hover:text-text-primary transition-colors"
+          >
+            {pushLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : pushActive ? (
+              <BellOff className="w-3.5 h-3.5 text-accent" />
+            ) : (
+              <Bell className="w-3.5 h-3.5" />
+            )}
+            {pushLoading
+              ? 'Bezig...'
+              : pushActive
+              ? 'Pushmeldingen ingeschakeld — klik om uit te zetten'
+              : 'Pushmeldingen uitgeschakeld — klik om in te schakelen'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

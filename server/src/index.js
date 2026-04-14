@@ -22,8 +22,20 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+const allowedOrigins = [
+  'https://www.geofacts.nl',
+  'https://geofacts.nl',
+  'https://geofacts-client-production.up.railway.app',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || true,
+  origin: (origin, callback) => {
+    // Sta requests zonder origin toe (bijv. mobiele apps, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('CORS niet toegestaan: ' + origin));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '2mb' }));

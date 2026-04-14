@@ -1,6 +1,6 @@
--- GeoFacts Seed Data
-
-INSERT INTO topics (name) VALUES
+-- GeoFacts Seed Data — alleen uitvoeren als de tabel nog leeg is
+INSERT INTO topics (name)
+SELECT v.name FROM (VALUES
   ('Geopolitiek'),
   ('Economie'),
   ('Defensie & Veiligheid'),
@@ -11,4 +11,6 @@ INSERT INTO topics (name) VALUES
   ('China'),
   ('Verenigde Staten'),
   ('Europa')
+) AS v(name)
+WHERE NOT EXISTS (SELECT 1 FROM topics LIMIT 1)
 ON CONFLICT (name) DO NOTHING;

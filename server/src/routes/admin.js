@@ -130,4 +130,31 @@ router.get('/users', async (req, res) => {
   }
 });
 
+// DELETE /api/admin/users/:id (alleen als geen berichten of reacties)
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { rows } = await db.query(
+      `SELECT
+        COUNT(DISTINCT p.id)::int AS post_count,
+        COUNT(DISTINCT c.id)::int AS comment_count
+       FROM users u
+       LEFT JOIN posts p ON p.user_id = u.id
+       LEFT JOIN comments c ON c.user_id = u.id
+       WHERE u.id = $1
+       GROUP BY u.id`,
+      [userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden.' });
+    if (rows[0].post_count > 0 || rows[0].comment_count > 0) {
+      return res.status(400).json({ error: 'Gebruiker heeft nog berichten of reacties en kan niet worden verwijderd.' });
+    }
+    await db.query('DELETE FROM users WHERE id = $1', [userId]);
+    res.json({ message: 'Gebruiker verwijderd.' });
+  } catch (err) {
+    console.error('Admin DELETE user error:', err);
+    res.status(500).json({ error: 'Gebruiker verwijderen mislukt.' });
+  }
+});
+
 module.exports = router;

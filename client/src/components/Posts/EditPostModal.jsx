@@ -40,7 +40,7 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
     setSubmitting(true);
 
     try {
-      const { data } = await api.put(`/posts/${post.id}`, {
+      await api.put(`/posts/${post.id}`, {
         content: content.trim(),
         linkUrl: linkUrl.trim() || null,
         linkTitle: linkPreview?.title || null,
@@ -48,7 +48,9 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
         linkImage: linkPreview?.image || null,
         topicIds: selectedTopics,
       });
-      onUpdate?.({ ...post, ...data, topics: post.topics?.filter((t) => selectedTopics.includes(t.id)) });
+      // Haal het volledige bericht op zodat topics correct worden bijgewerkt
+      const { data: fullPost } = await api.get(`/posts/${post.id}`);
+      onUpdate?.(fullPost);
     } catch (err) {
       setError(err.response?.data?.error || 'Bewerken mislukt.');
     } finally {

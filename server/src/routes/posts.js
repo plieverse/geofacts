@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
     const sortBy = req.query.sortBy === 'likes' ? 'likes' : 'date';
     const userId = req.query.userId ? parseInt(req.query.userId) : null;
     const topicId = req.query.topicId ? parseInt(req.query.topicId) : null;
+    const search = req.query.search ? req.query.search.trim() : null;
 
     // Determine current user from token if provided
     let currentUserId = null;
@@ -38,6 +39,12 @@ router.get('/', async (req, res) => {
     if (topicId) {
       whereConditions.push(`EXISTS (SELECT 1 FROM post_topics pt WHERE pt.post_id = p.id AND pt.topic_id = $${paramIdx++})`);
       params.push(topicId);
+    }
+
+    if (search) {
+      whereConditions.push(`(p.content ILIKE $${paramIdx} OR p.link_url ILIKE $${paramIdx} OR p.link_title ILIKE $${paramIdx})`);
+      params.push(`%${search}%`);
+      paramIdx++;
     }
 
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';

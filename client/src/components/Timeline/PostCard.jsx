@@ -36,17 +36,21 @@ function timeAgo(dateStr) {
 export default function PostCard({ post, onDelete, onUpdate }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [showComments, setShowComments] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [currentTopics, setCurrentTopics] = useState(post.topics || []);
 
   const canEdit = user && (user.id === post.user_id || user.is_admin);
   const canDelete = user && (user.id === post.user_id || user.is_admin);
 
   function handleCardClick(e) {
-    // Don't navigate if clicking interactive elements
     if (e.target.closest('button') || e.target.closest('a')) return;
     navigate(`/post/${post.id}`);
+  }
+
+  function handleUpdate(updated) {
+    if (updated.topics) setCurrentTopics(updated.topics);
+    onUpdate?.(updated);
   }
 
   return (
@@ -96,19 +100,8 @@ export default function PostCard({ post, onDelete, onUpdate }) {
           )}
         </div>
 
-        {/* Topics */}
-        {post.topics?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {post.topics.map((t) => (
-              <span key={t.id} className={`topic-chip ${topicColor(t.id)}`}>
-                {t.name}
-              </span>
-            ))}
-          </div>
-        )}
-
         {/* Content */}
-        <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
 
         {/* Link preview */}
         {post.link_url && (
@@ -120,35 +113,43 @@ export default function PostCard({ post, onDelete, onUpdate }) {
           />
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-divider">
-          <LikeButton
-            postId={post.id}
-            initialLiked={post.user_liked}
-            initialCount={post.like_count || 0}
-          />
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowComments((v) => !v); }}
-            className="flex items-center gap-1.5 text-text-secondary hover:text-accent transition-colors"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span className="text-sm">{post.comment_count || 0}</span>
-          </button>
+        {/* Actiebalk + onderwerpen */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-divider">
+          <div className="flex items-center gap-4">
+            <LikeButton
+              postId={post.id}
+              initialLiked={post.user_liked}
+              initialCount={post.like_count || 0}
+            />
+            <div className="flex items-center gap-1.5 text-text-secondary">
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-sm">{post.comment_count || 0}</span>
+            </div>
+          </div>
+
+          {/* Onderwerpen rechtsonder */}
+          {currentTopics?.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-end">
+              {currentTopics.map((t) => (
+                <span key={t.id} className={`topic-chip text-xs ${topicColor(t.id)}`}>
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Comments inline */}
-        {showComments && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <CommentSection postId={post.id} />
-          </div>
-        )}
+        {/* Reacties altijd zichtbaar */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <CommentSection postId={post.id} />
+        </div>
       </article>
 
       {showEdit && (
         <EditPostModal
-          post={post}
+          post={{ ...post, topics: currentTopics }}
           onClose={() => setShowEdit(false)}
-          onUpdate={(updated) => { onUpdate?.(updated); setShowEdit(false); }}
+          onUpdate={(updated) => { handleUpdate(updated); setShowEdit(false); }}
         />
       )}
     </>

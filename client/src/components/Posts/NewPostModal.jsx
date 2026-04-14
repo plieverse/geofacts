@@ -20,7 +20,14 @@ export default function NewPostModal({ onClose, onCreated }) {
     setLinkUrl(url);
     setLinkPreview(null);
     setPreviewFailed(false);
-    setManualTitle('');
+
+    // Alvast domein als suggestie voor handmatige titel
+    try {
+      const hostname = new URL(url.trim()).hostname.replace('www.', '');
+      setManualTitle(hostname);
+    } catch {
+      setManualTitle('');
+    }
 
     clearTimeout(linkDebounce.current);
     if (!url.trim()) return;

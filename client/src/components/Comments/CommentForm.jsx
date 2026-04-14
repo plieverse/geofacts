@@ -45,7 +45,7 @@ export default function CommentForm({ postId, onCommentAdded }) {
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Schrijf een reactie... (Ctrl+Enter om te plaatsen)"
-            className="input resize-none text-sm h-10 min-h-[40px] max-h-32 py-2"
+            className="input resize-none text-sm h-16 min-h-[64px] max-h-40 py-2"
             maxLength={1000}
           />
           <button

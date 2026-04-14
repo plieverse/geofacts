@@ -12,6 +12,7 @@ export default function Timeline({ refreshKey }) {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('date');
   const [topicId, setTopicId] = useState(null);
+  const [search, setSearch] = useState('');
 
   const fetchPosts = useCallback(async (pageNum = 1, reset = false) => {
     try {
@@ -20,6 +21,7 @@ export default function Timeline({ refreshKey }) {
         limit: 20,
         sortBy,
         ...(topicId ? { topicId } : {}),
+        ...(search ? { search } : {}),
       });
       const { data } = await api.get(`/posts?${params}`);
       if (reset || pageNum === 1) {
@@ -32,7 +34,7 @@ export default function Timeline({ refreshKey }) {
     } catch (err) {
       console.error('Fetch posts error:', err);
     }
-  }, [sortBy, topicId]);
+  }, [sortBy, topicId, search]);
 
   useEffect(() => {
     setLoading(true);
@@ -65,6 +67,8 @@ export default function Timeline({ refreshKey }) {
         setSortBy={setSortBy}
         topicId={topicId}
         setTopicId={setTopicId}
+        search={search}
+        setSearch={setSearch}
       />
 
       {loading ? (

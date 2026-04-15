@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function LoginModal() {
   const { login } = useAuth();
-  const [firstName, setFirstName] = useState('');
+  const [firstName, setFirstName] = useState(() => localStorage.getItem('geofacts_last_name') || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,6 +18,7 @@ export default function LoginModal() {
     setLoading(true);
     try {
       await login(firstName.trim());
+      localStorage.setItem('geofacts_last_name', firstName.trim());
     } catch (err) {
       setError(err.response?.data?.error || 'Inloggen mislukt. Probeer opnieuw.');
     } finally {

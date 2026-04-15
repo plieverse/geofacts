@@ -40,7 +40,7 @@ router.post('/login', async (req, res) => {
 
       if (!rows.length || !rows[0].is_approved) {
         return res.status(403).json({
-          error: 'Je naam staat niet op de toegangslijst. Vraag GeoAdmin om je toe te voegen.',
+          error: 'Je naam staat niet op de toegangslijst.',
         });
       }
 

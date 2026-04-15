@@ -69,7 +69,7 @@ export default function LoginModal() {
         </form>
 
         <p className="text-text-secondary text-xs text-center mt-6">
-          Geen wachtwoord nodig — alleen je voornaam.
+          Alleen toegang als GeoAdmin je heeft toegevoegd.
         </p>
       </div>
     </div>

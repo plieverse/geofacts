@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const db = require('../db');
 
 // POST /api/auth/login
-// Login with just first name (creates user if not exists)
 router.post('/login', async (req, res) => {
   try {
     const { firstName } = req.body;
@@ -19,17 +18,34 @@ router.post('/login', async (req, res) => {
 
     const isAdmin = trimmedName.toLowerCase() === 'geoadmin';
 
-    // Upsert user
-    const { rows } = await db.query(
-      `INSERT INTO users (first_name, is_admin)
-       VALUES ($1, $2)
-       ON CONFLICT (LOWER(first_name)) DO UPDATE
-         SET is_admin = CASE WHEN EXCLUDED.is_admin THEN EXCLUDED.is_admin ELSE users.is_admin END
-       RETURNING *`,
-      [trimmedName, isAdmin]
-    );
+    let user;
 
-    const user = rows[0];
+    if (isAdmin) {
+      // GeoAdmin: altijd toegang, aanmaken als die nog niet bestaat
+      const { rows } = await db.query(
+        `INSERT INTO users (first_name, is_admin, is_approved)
+         VALUES ($1, TRUE, TRUE)
+         ON CONFLICT (LOWER(first_name)) DO UPDATE
+           SET is_admin = TRUE, is_approved = TRUE
+         RETURNING *`,
+        [trimmedName]
+      );
+      user = rows[0];
+    } else {
+      // Gewone gebruiker: alleen toegang als GeoAdmin die heeft toegevoegd
+      const { rows } = await db.query(
+        `SELECT * FROM users WHERE LOWER(first_name) = LOWER($1)`,
+        [trimmedName]
+      );
+
+      if (!rows.length || !rows[0].is_approved) {
+        return res.status(403).json({
+          error: 'Je naam staat niet op de toegangslijst. Vraag GeoAdmin om je toe te voegen.',
+        });
+      }
+
+      user = rows[0];
+    }
 
     const token = jwt.sign(
       {

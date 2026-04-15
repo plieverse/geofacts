@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_first_name_lower_idx ON users (LOWER(first_name));
 
+-- Voeg is_approved toe aan users als die nog niet bestaat (DEFAULT TRUE zodat bestaande gebruikers toegang houden)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT TRUE;
+
 CREATE TABLE IF NOT EXISTS topics (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL UNIQUE,

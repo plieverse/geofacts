@@ -139,6 +139,31 @@ router.put('/topics/reorder', async (req, res) => {
   }
 });
 
+// POST /api/admin/users (nieuwe gebruiker toevoegen)
+router.post('/users', async (req, res) => {
+  try {
+    const { firstName } = req.body;
+    if (!firstName || !firstName.trim()) {
+      return res.status(400).json({ error: 'Voornaam is verplicht.' });
+    }
+    const trimmedName = firstName.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 50) {
+      return res.status(400).json({ error: 'Voornaam moet tussen 2 en 50 tekens zijn.' });
+    }
+    const { rows } = await db.query(
+      `INSERT INTO users (first_name, is_approved) VALUES ($1, TRUE) RETURNING *`,
+      [trimmedName]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Deze naam bestaat al.' });
+    }
+    console.error('Admin POST user error:', err);
+    res.status(500).json({ error: 'Gebruiker toevoegen mislukt.' });
+  }
+});
+
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
   try {

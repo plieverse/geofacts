@@ -3,6 +3,10 @@ import { Bell, X } from 'lucide-react';
 import { subscribeToPush, isPushSupported, getNotificationPermission } from '../../services/pushService';
 import { useAuth } from '../../context/AuthContext';
 
+const isStandalone =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  navigator.standalone === true;
+
 export default function PushPermissionBanner() {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
@@ -16,7 +20,8 @@ export default function PushPermissionBanner() {
     const permission = getNotificationPermission();
     if (permission === 'default') {
       const wasDismissed = localStorage.getItem('geofacts_push_dismissed');
-      if (!wasDismissed) {
+      // In standalone-modus altijd tonen (ook al eerder weggedrukt in browser)
+      if (!wasDismissed || isStandalone) {
         setShow(true);
       }
     }
@@ -43,13 +48,17 @@ export default function PushPermissionBanner() {
   if (!show) return null;
 
   return (
-    <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 mx-4 mt-4 max-w-[600px] mx-auto animate-fadeIn">
+    <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 mx-4 mt-4 animate-fadeIn">
       <div className="flex items-start gap-3">
         <Bell className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-text-primary">Schakel meldingen in</p>
+          <p className="text-sm font-semibold text-text-primary">
+            {isStandalone ? 'Wil je ook meldingen ontvangen?' : 'Schakel meldingen in'}
+          </p>
           <p className="text-xs text-text-secondary mt-0.5">
-            Ontvang een melding zodra er een nieuw bericht of reactie is.
+            {isStandalone
+              ? 'Je gebruikt GeoFacts als app. Schakel meldingen in om niets te missen.'
+              : 'Ontvang een melding zodra er een nieuw bericht of reactie is.'}
           </p>
           <div className="flex gap-2 mt-3">
             <button

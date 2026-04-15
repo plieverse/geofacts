@@ -1,14 +1,26 @@
 import React from 'react';
-import { Globe, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { Globe, LogOut, Settings, Sun, Moon, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import NotificationBell from '../Notifications/NotificationBell';
 import { useNotifications } from '../../hooks/useNotifications';
 
-export default function Header({ onAdminClick, showAdmin }) {
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+export default function Header({ onAdminClick, showAdmin, deferredInstallPrompt, isInstalled }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAllRead, markOneRead } = useNotifications();
+  const navigate = useNavigate();
+
+  async function handleInstall() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+    } else {
+      navigate('/installeren');
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-bg/90 backdrop-blur border-b border-divider">
@@ -28,6 +40,16 @@ export default function Header({ onAdminClick, showAdmin }) {
               <span className="text-text-secondary text-sm hidden sm:block">
                 {user.firstName}
               </span>
+
+              {!isInstalled && (
+                <button
+                  onClick={handleInstall}
+                  className="p-2 rounded-full text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+                  title="Installeer app op beginscherm"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              )}
 
               <button
                 onClick={toggleTheme}

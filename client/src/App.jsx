@@ -12,11 +12,28 @@ import PushPermissionBanner from './components/Notifications/PushPermissionBanne
 import InstallPage from './pages/InstallPage';
 import PostDetailPage from './pages/PostDetailPage';
 
+function useInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(
+    () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+  );
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => { setIsInstalled(true); setDeferredPrompt(null); });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  return { deferredPrompt, isInstalled };
+}
+
 function MainApp() {
   const { user, loading } = useAuth();
   const [showNewPost, setShowNewPost] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [timelineKey, setTimelineKey] = useState(0);
+  const { deferredPrompt, isInstalled } = useInstallPrompt();
 
   if (loading) {
     return (
@@ -38,6 +55,8 @@ function MainApp() {
       <Header
         onAdminClick={() => setShowAdmin((v) => !v)}
         showAdmin={showingAdmin}
+        deferredInstallPrompt={deferredPrompt}
+        isInstalled={isInstalled}
       />
 
       <main className="max-w-[600px] mx-auto pb-20">

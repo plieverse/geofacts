@@ -98,7 +98,7 @@ export default function NotificationDropdown({ notifications, onMarkAllRead, onM
             <button
               key={n.id}
               onClick={() => handleClick(n)}
-              className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-white/5 transition-colors border-b border-divider last:border-0 ${
+              className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-hover-surface/5 transition-colors border-b border-divider last:border-0 ${
                 !n.is_read ? 'bg-accent/5' : ''
               }`}
             >

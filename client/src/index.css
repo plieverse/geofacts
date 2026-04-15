@@ -2,12 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Kleurvariabelen ─────────────────────────────────────────── */
+:root {
+  /* Donkere modus (standaard) — waarden als RGB-triplets */
+  --color-bg:            21 32 43;
+  --color-panel:         30 42 53;
+  --color-text-primary:  231 233 234;
+  --color-text-secondary:136 153 166;
+  --color-divider:       47 51 54;
+  --color-hover-surface: 255 255 255;   /* wit overlay op donker */
+  --scrollbar-track:     #15202B;
+  --scrollbar-thumb:     #2F3336;
+  --scrollbar-hover:     #8899A6;
+}
+
+[data-theme="light"] {
+  /* Lichte modus */
+  --color-bg:            247 249 250;
+  --color-panel:         255 255 255;
+  --color-text-primary:  15 20 25;
+  --color-text-secondary:83 100 113;
+  --color-divider:       207 217 222;
+  --color-hover-surface: 0 0 0;        /* zwart overlay op licht */
+  --scrollbar-track:     #F7F9FA;
+  --scrollbar-thumb:     #CFD9DE;
+  --scrollbar-hover:     #536471;
+}
+
+/* ─── Base ────────────────────────────────────────────────────── */
 @layer base {
   body {
-    background-color: #15202B;
-    color: #E7E9EA;
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text-primary));
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
     min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   * {
@@ -19,19 +48,20 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #15202B;
+    background: var(--scrollbar-track);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #2F3336;
+    background: var(--scrollbar-thumb);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #8899A6;
+    background: var(--scrollbar-hover);
   }
 }
 
+/* ─── Components ──────────────────────────────────────────────── */
 @layer components {
   .btn-primary {
     @apply bg-accent hover:bg-accent-light text-white font-semibold px-4 py-2 rounded-full transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
@@ -54,10 +84,10 @@
   }
 }
 
-/* Animations */
+/* ─── Animaties ───────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fadeIn {
@@ -65,8 +95,8 @@
 }
 
 @keyframes pulse-heart {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.3); }
   100% { transform: scale(1); }
 }
 
@@ -74,7 +104,7 @@
   animation: pulse-heart 0.3s ease-out;
 }
 
-/* PWA safe areas */
+/* ─── PWA safe areas ──────────────────────────────────────────── */
 @supports (padding: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);

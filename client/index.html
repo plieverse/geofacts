@@ -14,6 +14,12 @@
     <title>GeoFacts</title>
   </head>
   <body>
+    <script>
+      try {
+        var t = localStorage.getItem('geofacts_theme');
+        if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      } catch(e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

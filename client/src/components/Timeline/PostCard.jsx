@@ -7,7 +7,7 @@ import LinkPreview from './LinkPreview';
 import CommentSection from '../Comments/CommentSection';
 import EditPostModal from '../Posts/EditPostModal';
 
-const TOPIC_CHIP_CLASS = 'border-white/20 text-text-secondary bg-white/5';
+const TOPIC_CHIP_CLASS = 'border-hover-surface/20 text-text-secondary bg-hover-surface/5';
 
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -58,7 +58,7 @@ export default function PostCard({ post, onDelete, onUpdate }) {
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-                className="p-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-full text-text-secondary hover:text-text-primary hover:bg-hover-surface/5 transition-colors"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -66,7 +66,7 @@ export default function PostCard({ post, onDelete, onUpdate }) {
                 <div className="absolute right-0 top-full mt-1 card py-1 z-10 w-36 shadow-xl animate-fadeIn" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => { setShowEdit(true); setMenuOpen(false); }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-primary hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-primary hover:bg-hover-surface/5 transition-colors"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     Bewerken

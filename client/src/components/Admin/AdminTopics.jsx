@@ -142,7 +142,7 @@ export default function AdminTopics() {
               <button onClick={() => handleEdit(t.id)} className="p-1.5 rounded-full text-success hover:bg-success/10 transition-colors">
                 <Check className="w-4 h-4" />
               </button>
-              <button onClick={() => setEditId(null)} className="p-1.5 rounded-full text-text-secondary hover:bg-white/5 transition-colors">
+              <button onClick={() => setEditId(null)} className="p-1.5 rounded-full text-text-secondary hover:bg-hover-surface/5 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </>

@@ -7,7 +7,7 @@ import LikeButton from '../components/Timeline/LikeButton';
 import LinkPreview from '../components/Timeline/LinkPreview';
 import CommentSection from '../components/Comments/CommentSection';
 
-const TOPIC_CHIP_CLASS = 'border-white/20 text-text-secondary bg-white/5';
+const TOPIC_CHIP_CLASS = 'border-hover-surface/20 text-text-secondary bg-hover-surface/5';
 
 function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
@@ -52,7 +52,7 @@ export default function PostDetailPage() {
         <div className="flex items-center gap-3 px-4 h-14">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-full hover:bg-white/5 text-text-secondary hover:text-text-primary transition-colors"
+            className="p-2 rounded-full hover:bg-hover-surface/5 text-text-secondary hover:text-text-primary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

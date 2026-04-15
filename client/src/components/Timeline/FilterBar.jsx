@@ -69,7 +69,7 @@ export default function FilterBar({ sortBy, setSortBy, topicId, setTopicId, sear
               <button
                 onClick={() => { setTopicId(null); setDropdownOpen(false); }}
                 className={`flex items-center w-full px-3 py-2 text-sm transition-colors ${
-                  !topicId ? 'text-accent font-semibold' : 'text-text-primary hover:bg-white/5'
+                  !topicId ? 'text-accent font-semibold' : 'text-text-primary hover:bg-hover-surface/5'
                 }`}
               >
                 Alle onderwerpen
@@ -80,7 +80,7 @@ export default function FilterBar({ sortBy, setSortBy, topicId, setTopicId, sear
                   key={t.id}
                   onClick={() => { setTopicId(topicId === t.id ? null : t.id); setDropdownOpen(false); }}
                   className={`flex items-center w-full px-3 py-2 text-sm transition-colors ${
-                    topicId === t.id ? 'text-accent font-semibold' : 'text-text-primary hover:bg-white/5'
+                    topicId === t.id ? 'text-accent font-semibold' : 'text-text-primary hover:bg-hover-surface/5'
                   }`}
                 >
                   {t.name}

@@ -63,7 +63,7 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
       <div className="card w-full max-w-lg animate-fadeIn max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-divider sticky top-0 bg-panel z-10">
           <h2 className="font-bold text-text-primary">Bericht bewerken</h2>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-text-secondary">
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-hover-surface/10 text-text-secondary">
             <X className="w-5 h-5" />
           </button>
         </div>

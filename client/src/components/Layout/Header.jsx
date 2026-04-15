@@ -1,11 +1,13 @@
 import React from 'react';
-import { Globe, LogOut, Settings } from 'lucide-react';
+import { Globe, LogOut, Settings, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import NotificationBell from '../Notifications/NotificationBell';
 import { useNotifications } from '../../hooks/useNotifications';
 
 export default function Header({ onAdminClick, showAdmin }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { notifications, unreadCount, markAllRead, markOneRead } = useNotifications();
 
   return (
@@ -26,6 +28,14 @@ export default function Header({ onAdminClick, showAdmin }) {
               <span className="text-text-secondary text-sm hidden sm:block">
                 {user.firstName}
               </span>
+
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+                title={theme === 'dark' ? 'Schakel naar lichte modus' : 'Schakel naar donkere modus'}
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
 
               <NotificationBell
                 notifications={notifications}

@@ -141,8 +141,29 @@ async function createLikeNotification(postId, likerId) {
   }
 }
 
+async function createCommentLikeNotification(commentId, likerId) {
+  try {
+    const { rows } = await db.query(
+      'SELECT user_id, post_id FROM comments WHERE id = $1',
+      [commentId]
+    );
+    if (!rows.length) return;
+    const { user_id: commentAuthorId, post_id: postId } = rows[0];
+    if (commentAuthorId === likerId) return;
+
+    await db.query(
+      'INSERT INTO notifications (user_id, type, post_id, triggered_by) VALUES ($1, $2, $3, $4)',
+      [commentAuthorId, 'comment_like', postId, likerId]
+    );
+    // Geen push-notificatie voor likes (zelfde gedrag als likes op berichten)
+  } catch (err) {
+    console.error('createCommentLikeNotification error:', err);
+  }
+}
+
 module.exports = {
   createPostNotifications,
   createCommentNotification,
   createLikeNotification,
+  createCommentLikeNotification,
 };

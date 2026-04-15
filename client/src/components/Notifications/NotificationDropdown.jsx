@@ -18,15 +18,17 @@ function timeAgo(dateStr) {
 }
 
 const TYPE_ICONS = {
-  new_post: <FileText className="w-4 h-4 text-accent" />,
-  comment: <MessageCircle className="w-4 h-4 text-success" />,
-  like: <Heart className="w-4 h-4 text-heart" />,
+  new_post:     <FileText className="w-4 h-4 text-accent" />,
+  comment:      <MessageCircle className="w-4 h-4 text-success" />,
+  like:         <Heart className="w-4 h-4 text-heart" />,
+  comment_like: <Heart className="w-4 h-4 text-heart" />,
 };
 
 const TYPE_LABELS = {
-  new_post: 'heeft een nieuw bericht geplaatst',
-  comment: 'reageerde op een bericht',
-  like: 'vind jouw bericht leuk',
+  new_post:     'heeft een nieuw bericht geplaatst',
+  comment:      'reageerde op een bericht',
+  like:         'vind jouw bericht leuk',
+  comment_like: 'vind jouw reactie leuk',
 };
 
 export default function NotificationDropdown({ notifications, onMarkAllRead, onMarkOneRead, onClose }) {

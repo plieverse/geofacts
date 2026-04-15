@@ -53,6 +53,18 @@ CREATE TABLE IF NOT EXISTS comments (
 -- Add sort_order to topics if not already present
 ALTER TABLE topics ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;
 
+CREATE TABLE IF NOT EXISTS comment_likes (
+  id SERIAL PRIMARY KEY,
+  comment_id INT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  user_id    INT NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+  UNIQUE (comment_id, user_id)
+);
+
+-- Voeg comment_like toe aan het type-constraint van notifications
+ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+ALTER TABLE notifications ADD CONSTRAINT notifications_type_check
+  CHECK (type IN ('new_post', 'comment', 'like', 'comment_like'));
+
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

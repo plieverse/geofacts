@@ -4,20 +4,7 @@
 
 /* ─── Kleurvariabelen ─────────────────────────────────────────── */
 :root {
-  /* Donkere modus (standaard) — waarden als RGB-triplets */
-  --color-bg:            21 32 43;
-  --color-panel:         30 42 53;
-  --color-text-primary:  231 233 234;
-  --color-text-secondary:136 153 166;
-  --color-divider:       47 51 54;
-  --color-hover-surface: 255 255 255;   /* wit overlay op donker */
-  --scrollbar-track:     #15202B;
-  --scrollbar-thumb:     #2F3336;
-  --scrollbar-hover:     #8899A6;
-}
-
-[data-theme="light"] {
-  /* Lichte modus */
+  /* Lichte modus (standaard) */
   --color-bg:            247 249 250;
   --color-panel:         255 255 255;
   --color-text-primary:  15 20 25;
@@ -27,6 +14,19 @@
   --scrollbar-track:     #F7F9FA;
   --scrollbar-thumb:     #CFD9DE;
   --scrollbar-hover:     #536471;
+}
+
+[data-theme="dark"] {
+  /* Donkere modus */
+  --color-bg:            21 32 43;
+  --color-panel:         30 42 53;
+  --color-text-primary:  231 233 234;
+  --color-text-secondary:136 153 166;
+  --color-divider:       47 51 54;
+  --color-hover-surface: 255 255 255;  /* wit overlay op donker */
+  --scrollbar-track:     #15202B;
+  --scrollbar-thumb:     #2F3336;
+  --scrollbar-hover:     #8899A6;
 }
 
 /* ─── Base ────────────────────────────────────────────────────── */

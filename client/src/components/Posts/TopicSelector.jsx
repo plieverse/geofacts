@@ -21,7 +21,7 @@ export default function TopicSelector({ selected, onChange }) {
   }
 
   async function handleAddTopic(e) {
-    e.preventDefault();
+    e?.preventDefault();
     if (!newTopic.trim()) return;
     setAdding(true);
     try {
@@ -58,23 +58,24 @@ export default function TopicSelector({ selected, onChange }) {
         ))}
 
         {showInput ? (
-          <form onSubmit={handleAddTopic} className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
             <input
               type="text"
               value={newTopic}
               onChange={(e) => setNewTopic(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTopic(); } }}
               placeholder="Nieuw onderwerp"
               className="input py-0.5 text-sm w-36"
               autoFocus
               maxLength={100}
             />
-            <button type="submit" disabled={adding} className="text-accent hover:text-accent-light">
+            <button type="button" onClick={handleAddTopic} disabled={adding} className="text-accent hover:text-accent-light">
               <Plus className="w-4 h-4" />
             </button>
             <button type="button" onClick={() => setShowInput(false)} className="text-text-secondary">
               <X className="w-4 h-4" />
             </button>
-          </form>
+          </div>
         ) : (
           <button
             type="button"

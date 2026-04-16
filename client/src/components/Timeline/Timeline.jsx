@@ -60,6 +60,22 @@ export default function Timeline({ refreshKey }) {
     setPosts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
   }
 
+  function handlePin(postId, pinned) {
+    setPosts((prev) => {
+      // Update is_pinned: nieuw gepind bericht = true, alle andere = false (als pinned=true)
+      const updated = prev.map((p) => ({
+        ...p,
+        is_pinned: p.id === postId ? pinned : (pinned ? false : p.is_pinned),
+      }));
+      // Gepind bericht altijd bovenaan
+      const pinnedPost = updated.find((p) => p.is_pinned);
+      if (pinnedPost) {
+        return [pinnedPost, ...updated.filter((p) => !p.is_pinned)];
+      }
+      return updated;
+    });
+  }
+
   return (
     <div>
       <FilterBar
@@ -84,7 +100,7 @@ export default function Timeline({ refreshKey }) {
         <div className="divide-y divide-divider">
           {posts.map((post) => (
             <div key={post.id} className="p-4">
-              <PostCard post={post} onDelete={handleDelete} onUpdate={handleUpdate} />
+              <PostCard post={post} onDelete={handleDelete} onUpdate={handleUpdate} onPin={handlePin} />
             </div>
           ))}
         </div>

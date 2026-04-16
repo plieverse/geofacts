@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { MessageCircle, Edit2, Trash2, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, Edit2, Trash2, MoreHorizontal, Pin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LikeButton from './LikeButton';
 import LinkPreview from './LinkPreview';
 import CommentSection from '../Comments/CommentSection';
 import EditPostModal from '../Posts/EditPostModal';
+import api from '../../services/api';
 
 const TOPIC_CHIP_CLASS = 'border-hover-surface/20 text-text-secondary bg-hover-surface/5';
 
@@ -18,13 +19,14 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
 }
 
-export default function PostCard({ post, onDelete, onUpdate }) {
+export default function PostCard({ post, onDelete, onUpdate, onPin }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [currentTopics, setCurrentTopics] = useState(post.topics || []);
   const [showComments, setShowComments] = useState((post.comment_count || 0) > 0);
+  const [pinLoading, setPinLoading] = useState(false);
 
   const canEdit = user && (user.id === post.user_id || user.is_admin);
   const canDelete = user && (user.id === post.user_id || user.is_admin);
@@ -39,9 +41,34 @@ export default function PostCard({ post, onDelete, onUpdate }) {
     onUpdate?.(updated);
   }
 
+  async function handlePin(e) {
+    e.stopPropagation();
+    if (!user || pinLoading) return;
+    setPinLoading(true);
+    try {
+      const { data } = await api.post(`/posts/${post.id}/pin`);
+      onPin?.(post.id, data.pinned);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Pinnen mislukt.');
+    } finally {
+      setPinLoading(false);
+    }
+  }
+
   return (
     <>
-      <article className="card p-4 hover:border-accent/30 transition-colors cursor-pointer" onClick={handleCardClick}>
+      <article
+        className={`card p-4 hover:border-accent/30 transition-colors cursor-pointer ${post.is_pinned ? 'border-accent/40' : ''}`}
+        onClick={handleCardClick}
+      >
+        {/* Vastgepind-badge */}
+        {post.is_pinned && (
+          <div className="flex items-center gap-1.5 text-xs text-accent font-medium mb-2">
+            <Pin className="w-3 h-3 fill-accent" />
+            Vastgepind
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -114,6 +141,18 @@ export default function PostCard({ post, onDelete, onUpdate }) {
               <MessageCircle className="w-4 h-4" />
               <span className="text-sm">{post.comment_count || 0}</span>
             </button>
+            {user && (
+              <button
+                onClick={handlePin}
+                disabled={pinLoading}
+                className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                  post.is_pinned ? 'text-accent' : 'text-text-secondary hover:text-accent'
+                }`}
+                title={post.is_pinned ? 'Pin losmaken' : 'Vastpinnen'}
+              >
+                <Pin className={`w-4 h-4 ${post.is_pinned ? 'fill-accent' : ''}`} />
+              </button>
+            )}
           </div>
 
           {/* Onderwerpen rechtsonder */}

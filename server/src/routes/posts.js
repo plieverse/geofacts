@@ -50,8 +50,8 @@ router.get('/', async (req, res) => {
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
     const orderClause = sortBy === 'likes'
-      ? 'ORDER BY like_count DESC, p.created_at DESC'
-      : 'ORDER BY p.created_at DESC';
+      ? 'ORDER BY p.is_pinned DESC, like_count DESC, p.created_at DESC'
+      : 'ORDER BY p.is_pinned DESC, p.created_at DESC';
 
     const query = `
       SELECT
@@ -258,6 +258,28 @@ router.put('/:id', auth, async (req, res) => {
   } catch (err) {
     console.error('PUT /posts/:id error:', err);
     res.status(500).json({ error: 'Bericht bewerken mislukt.' });
+  }
+});
+
+// POST /api/posts/:id/pin (toggle vastpinnen, elke ingelogde gebruiker)
+router.post('/:id/pin', auth, async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id);
+    const { rows } = await db.query('SELECT id, is_pinned FROM posts WHERE id = $1', [postId]);
+    if (!rows.length) return res.status(404).json({ error: 'Bericht niet gevonden.' });
+
+    const currentlyPinned = rows[0].is_pinned;
+    if (currentlyPinned) {
+      await db.query('UPDATE posts SET is_pinned = FALSE WHERE id = $1', [postId]);
+      res.json({ pinned: false });
+    } else {
+      await db.query('UPDATE posts SET is_pinned = FALSE');
+      await db.query('UPDATE posts SET is_pinned = TRUE WHERE id = $1', [postId]);
+      res.json({ pinned: true });
+    }
+  } catch (err) {
+    console.error('POST pin error:', err);
+    res.status(500).json({ error: 'Pinnen mislukt.' });
   }
 });
 

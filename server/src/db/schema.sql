@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS comments (
 -- Add sort_order to topics if not already present
 ALTER TABLE topics ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;
 
+-- Pin-functionaliteit voor berichten
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
+
 CREATE TABLE IF NOT EXISTS comment_likes (
   id SERIAL PRIMARY KEY,
   comment_id INT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,

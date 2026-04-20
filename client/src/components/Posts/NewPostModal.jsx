@@ -16,8 +16,9 @@ export default function NewPostModal({ onClose, onCreated }) {
 
   // Samenvatting
   const [summary, setSummary] = useState('');
-  const [summaryStatus, setSummaryStatus] = useState('idle'); // idle | loading | success | error | manual
+  const [summaryStatus, setSummaryStatus] = useState('idle'); // idle | loading | success | error
   const [summaryError, setSummaryError] = useState('');
+  const [summaryIsManual, setSummaryIsManual] = useState(false);
   const [showSummaryEdit, setShowSummaryEdit] = useState(false);
 
   const linkDebounce = useRef(null);
@@ -27,10 +28,10 @@ export default function NewPostModal({ onClose, onCreated }) {
     setLinkUrl(url);
     setLinkPreview(null);
     setPreviewFailed(false);
-    // Reset samenvatting als de URL verandert
     setSummary('');
     setSummaryStatus('idle');
     setSummaryError('');
+    setSummaryIsManual(false);
     setShowSummaryEdit(false);
 
     try {
@@ -73,6 +74,7 @@ export default function NewPostModal({ onClose, onCreated }) {
     setSummaryStatus('loading');
     setSummaryError('');
     setSummary('');
+    setSummaryIsManual(false);
     setShowSummaryEdit(false);
     try {
       const { data } = await api.post('/summarize', { url: linkUrl.trim() });
@@ -88,6 +90,7 @@ export default function NewPostModal({ onClose, onCreated }) {
     setSummary('');
     setSummaryStatus('idle');
     setSummaryError('');
+    setSummaryIsManual(false);
     setShowSummaryEdit(false);
   }
 
@@ -106,6 +109,7 @@ export default function NewPostModal({ onClose, onCreated }) {
         linkImage: linkPreview?.image || null,
         topicIds: selectedTopics,
         summary: summary.trim() || null,
+        summaryIsManual,
       });
       onCreated?.(data);
       onClose();
@@ -156,12 +160,14 @@ export default function NewPostModal({ onClose, onCreated }) {
               placeholder="https://..."
               className="input"
             />
+
             {previewLoading && (
               <div className="flex items-center gap-2 mt-2 text-text-secondary text-sm">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 Voorvertoning laden...
               </div>
             )}
+
             {linkPreview && !previewLoading && (
               <div className="mt-2 border border-divider rounded-lg p-3 bg-bg">
                 {linkPreview.image && (
@@ -171,6 +177,7 @@ export default function NewPostModal({ onClose, onCreated }) {
                 {linkPreview.description && <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">{linkPreview.description}</p>}
               </div>
             )}
+
             {previewFailed && !previewLoading && linkUrl.trim() && (
               <div className="mt-2 space-y-1.5">
                 <p className="text-xs text-text-secondary">
@@ -187,7 +194,7 @@ export default function NewPostModal({ onClose, onCreated }) {
               </div>
             )}
 
-            {/* Samenvatting-sectie */}
+            {/* Samenvatting — genereer-knop */}
             {showSummaryButton && summaryStatus === 'idle' && (
               <button
                 type="button"
@@ -199,6 +206,7 @@ export default function NewPostModal({ onClose, onCreated }) {
               </button>
             )}
 
+            {/* Samenvatting — laden */}
             {summaryStatus === 'loading' && (
               <div className="mt-2 flex items-center gap-2 text-text-secondary text-xs">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -206,7 +214,8 @@ export default function NewPostModal({ onClose, onCreated }) {
               </div>
             )}
 
-            {summaryStatus === 'success' && summary && (
+            {/* Samenvatting — gegenereerd */}
+            {summaryStatus === 'success' && (
               <div className="mt-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-accent">
@@ -246,13 +255,23 @@ export default function NewPostModal({ onClose, onCreated }) {
               </div>
             )}
 
+            {/* Samenvatting — fout + handmatig invoerveld */}
             {summaryStatus === 'error' && (
-              <div className="mt-2 rounded-lg border border-red-400/20 bg-red-400/5 p-3">
-                <div className="flex items-center gap-1.5 text-xs text-red-400 mb-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  {summaryError}
+              <div className="mt-2 rounded-lg border border-divider p-3 space-y-2">
+                <div className="flex items-start gap-1.5 text-xs text-text-secondary">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <span>{summaryError} Typ of plak hieronder zelf een samenvatting, of probeer opnieuw.</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <textarea
+                  value={summary}
+                  onChange={(e) => { setSummary(e.target.value); setSummaryIsManual(true); }}
+                  placeholder="Typ of plak hier een samenvatting..."
+                  className="input resize-none text-xs w-full"
+                  rows={3}
+                  maxLength={1000}
+                  autoFocus
+                />
+                <div className="flex items-center justify-between">
                   <button
                     type="button"
                     onClick={handleGenerateSummary}
@@ -262,37 +281,12 @@ export default function NewPostModal({ onClose, onCreated }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setSummaryStatus('manual'); setSummaryError(''); setShowSummaryEdit(true); }}
-                    className="text-xs text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    Zelf schrijven
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {summaryStatus === 'manual' && (
-              <div className="mt-2 rounded-lg border border-divider p-3">
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  Samenvatting (optioneel)
-                </label>
-                <textarea
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Schrijf een korte samenvatting..."
-                  className="input resize-none text-xs w-full"
-                  rows={3}
-                  maxLength={1000}
-                />
-                {summary.trim() === '' && (
-                  <button
-                    type="button"
                     onClick={handleClearSummary}
-                    className="text-xs text-text-secondary hover:text-text-primary mt-1 transition-colors"
+                    className="text-xs text-text-secondary hover:text-text-primary transition-colors"
                   >
                     Annuleren
                   </button>
-                )}
+                </div>
               </div>
             )}
           </div>

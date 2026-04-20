@@ -162,7 +162,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/posts
 router.post('/', auth, async (req, res) => {
   try {
-    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary } = req.body;
+    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Inhoud is verplicht.' });
@@ -173,6 +173,9 @@ router.post('/', auth, async (req, res) => {
       await client.query('BEGIN');
 
       const summaryValue = summary && summary.trim() ? summary.trim() : null;
+      const summaryStatusValue = summaryValue
+        ? (summaryIsManual ? 'manual' : 'generated')
+        : null;
 
       const { rows } = await client.query(
         `INSERT INTO posts (user_id, content, link_url, link_title, link_description, link_image, summary, summary_status)
@@ -185,7 +188,7 @@ router.post('/', auth, async (req, res) => {
           linkDescription || null,
           linkImage || null,
           summaryValue,
-          summaryValue ? 'generated' : null,
+          summaryStatusValue,
         ]
       );
 

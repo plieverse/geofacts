@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Link, Loader2 } from 'lucide-react';
+import { X, Link, Loader2, Sparkles, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import TopicSelector from './TopicSelector';
 
@@ -13,6 +13,13 @@ export default function NewPostModal({ onClose, onCreated }) {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Samenvatting
+  const [summary, setSummary] = useState('');
+  const [summaryStatus, setSummaryStatus] = useState('idle'); // idle | loading | success | error | manual
+  const [summaryError, setSummaryError] = useState('');
+  const [showSummaryEdit, setShowSummaryEdit] = useState(false);
+
   const linkDebounce = useRef(null);
 
   function handleLinkChange(e) {
@@ -20,17 +27,21 @@ export default function NewPostModal({ onClose, onCreated }) {
     setLinkUrl(url);
     setLinkPreview(null);
     setPreviewFailed(false);
+    // Reset samenvatting als de URL verandert
+    setSummary('');
+    setSummaryStatus('idle');
+    setSummaryError('');
+    setShowSummaryEdit(false);
 
-    // Genereer een betere titelsugggestie: domein + laatste pad-segment
     try {
       const parsed = new URL(url.trim());
       const hostname = parsed.hostname.replace('www.', '');
       const segments = parsed.pathname.split('/').filter(Boolean);
       if (segments.length > 0) {
         const lastSegment = segments[segments.length - 1]
-          .replace(/\.\w{2,5}$/, '')   // verwijder extensie
-          .replace(/[-_]/g, ' ')        // streepjes naar spaties
-          .replace(/\b\w/g, (c) => c.toUpperCase()); // elk woord hoofdletter
+          .replace(/\.\w{2,5}$/, '')
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase());
         setManualTitle(`${hostname} — ${lastSegment}`);
       } else {
         setManualTitle(hostname);
@@ -57,6 +68,29 @@ export default function NewPostModal({ onClose, onCreated }) {
     }, 800);
   }
 
+  async function handleGenerateSummary() {
+    if (!linkUrl.trim() || summaryStatus === 'loading') return;
+    setSummaryStatus('loading');
+    setSummaryError('');
+    setSummary('');
+    setShowSummaryEdit(false);
+    try {
+      const { data } = await api.post('/summarize', { url: linkUrl.trim() });
+      setSummary(data.summary);
+      setSummaryStatus('success');
+    } catch (err) {
+      setSummaryError(err.response?.data?.error || 'Samenvatting genereren mislukt.');
+      setSummaryStatus('error');
+    }
+  }
+
+  function handleClearSummary() {
+    setSummary('');
+    setSummaryStatus('idle');
+    setSummaryError('');
+    setShowSummaryEdit(false);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!content.trim()) { setError('Inhoud is verplicht.'); return; }
@@ -71,6 +105,7 @@ export default function NewPostModal({ onClose, onCreated }) {
         linkDescription: linkPreview?.description || null,
         linkImage: linkPreview?.image || null,
         topicIds: selectedTopics,
+        summary: summary.trim() || null,
       });
       onCreated?.(data);
       onClose();
@@ -80,6 +115,8 @@ export default function NewPostModal({ onClose, onCreated }) {
       setSubmitting(false);
     }
   }
+
+  const showSummaryButton = linkUrl.trim().length > 0 && !previewLoading;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
@@ -147,6 +184,115 @@ export default function NewPostModal({ onClose, onCreated }) {
                   className="input text-sm"
                   maxLength={255}
                 />
+              </div>
+            )}
+
+            {/* Samenvatting-sectie */}
+            {showSummaryButton && summaryStatus === 'idle' && (
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                className="mt-2 flex items-center gap-1.5 text-xs text-accent hover:text-accent-light transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                AI-samenvatting genereren
+              </button>
+            )}
+
+            {summaryStatus === 'loading' && (
+              <div className="mt-2 flex items-center gap-2 text-text-secondary text-xs">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Samenvatting genereren...
+              </div>
+            )}
+
+            {summaryStatus === 'success' && summary && (
+              <div className="mt-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-accent">
+                    <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    AI-samenvatting
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowSummaryEdit((v) => !v)}
+                      className="text-text-secondary hover:text-text-primary transition-colors"
+                      title="Bewerken"
+                    >
+                      {showSummaryEdit ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearSummary}
+                      className="text-text-secondary hover:text-red-400 transition-colors"
+                      title="Verwijderen"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                {showSummaryEdit ? (
+                  <textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    className="input resize-none text-xs w-full mt-1"
+                    rows={4}
+                    maxLength={1000}
+                  />
+                ) : (
+                  <p className="text-xs text-text-primary leading-relaxed">{summary}</p>
+                )}
+              </div>
+            )}
+
+            {summaryStatus === 'error' && (
+              <div className="mt-2 rounded-lg border border-red-400/20 bg-red-400/5 p-3">
+                <div className="flex items-center gap-1.5 text-xs text-red-400 mb-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  {summaryError}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleGenerateSummary}
+                    className="text-xs text-accent hover:text-accent-light transition-colors"
+                  >
+                    Opnieuw proberen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSummaryStatus('manual'); setSummaryError(''); setShowSummaryEdit(true); }}
+                    className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    Zelf schrijven
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {summaryStatus === 'manual' && (
+              <div className="mt-2 rounded-lg border border-divider p-3">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Samenvatting (optioneel)
+                </label>
+                <textarea
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  placeholder="Schrijf een korte samenvatting..."
+                  className="input resize-none text-xs w-full"
+                  rows={3}
+                  maxLength={1000}
+                />
+                {summary.trim() === '' && (
+                  <button
+                    type="button"
+                    onClick={handleClearSummary}
+                    className="text-xs text-text-secondary hover:text-text-primary mt-1 transition-colors"
+                  >
+                    Annuleren
+                  </button>
+                )}
               </div>
             )}
           </div>

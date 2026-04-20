@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LikeButton from '../components/Timeline/LikeButton';
@@ -20,6 +20,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     api.get(`/posts/${id}`)
@@ -92,6 +93,26 @@ export default function PostDetailPage() {
             description={post.link_description}
             image={post.link_image}
           />
+        )}
+
+        {/* Samenvatting */}
+        {post.summary && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setShowSummary((v) => !v)}
+              className="flex items-center gap-1.5 text-sm text-accent hover:text-accent-light transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI-samenvatting
+              {showSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {showSummary && (
+              <div className="mt-2 rounded-lg border border-accent/20 bg-accent/5 p-4">
+                <p className="text-sm text-text-primary leading-relaxed">{post.summary}</p>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Actions */}

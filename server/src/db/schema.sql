@@ -56,6 +56,10 @@ ALTER TABLE topics ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;
 -- Pin-functionaliteit voor berichten
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
 
+-- Samenvatting voor berichten
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary TEXT DEFAULT NULL;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS summary_status VARCHAR(20) DEFAULT NULL;
+
 CREATE TABLE IF NOT EXISTS comment_likes (
   id SERIAL PRIMARY KEY,
   comment_id INT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,

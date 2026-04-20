@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Edit2, Trash2, MoreHorizontal, Pin } from 'lucide-react';
+import { MessageCircle, Edit2, Trash2, MoreHorizontal, Pin, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LikeButton from './LikeButton';
@@ -27,6 +27,7 @@ export default function PostCard({ post, onDelete, onUpdate, onPin }) {
   const [currentTopics, setCurrentTopics] = useState(post.topics || []);
   const [showComments, setShowComments] = useState((post.comment_count || 0) > 0);
   const [pinLoading, setPinLoading] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const canEdit = user && (user.id === post.user_id || user.is_admin);
   const canDelete = user && (user.id === post.user_id || user.is_admin);
@@ -124,6 +125,26 @@ export default function PostCard({ post, onDelete, onUpdate, onPin }) {
             description={post.link_description}
             image={post.link_image}
           />
+        )}
+
+        {/* Samenvatting */}
+        {post.summary && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowSummary((v) => !v); }}
+              className="flex items-center gap-1.5 text-xs text-accent hover:text-accent-light transition-colors"
+            >
+              <Sparkles className="w-3 h-3" />
+              AI-samenvatting
+              {showSummary ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {showSummary && (
+              <div className="mt-1.5 rounded-lg border border-accent/20 bg-accent/5 p-3">
+                <p className="text-xs text-text-primary leading-relaxed">{post.summary}</p>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Actiebalk + onderwerpen */}

@@ -225,7 +225,7 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds } = req.body;
+    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual } = req.body;
 
     // Check ownership (or admin)
     const { rows: existing } = await db.query('SELECT * FROM posts WHERE id = $1', [postId]);
@@ -238,15 +238,27 @@ router.put('/:id', auth, async (req, res) => {
     try {
       await client.query('BEGIN');
 
+      // summary: null = verwijderen, undefined = ongewijzigd laten, string = opslaan
+      const summaryValue = summary === null ? null
+        : summary !== undefined && summary.trim() ? summary.trim()
+        : existing[0].summary;
+      const summaryStatusValue = summary === null ? null
+        : summary !== undefined && summary.trim()
+          ? (summaryIsManual ? 'manual' : 'generated')
+          : existing[0].summary_status;
+
       const { rows } = await client.query(
-        `UPDATE posts SET content = $1, link_url = $2, link_title = $3, link_description = $4, link_image = $5, updated_at = NOW()
-         WHERE id = $6 RETURNING *`,
+        `UPDATE posts SET content = $1, link_url = $2, link_title = $3, link_description = $4, link_image = $5,
+         summary = $6, summary_status = $7, updated_at = NOW()
+         WHERE id = $8 RETURNING *`,
         [
           content || existing[0].content,
           linkUrl !== undefined ? linkUrl : existing[0].link_url,
           linkTitle !== undefined ? linkTitle : existing[0].link_title,
           linkDescription !== undefined ? linkDescription : existing[0].link_description,
           linkImage !== undefined ? linkImage : existing[0].link_image,
+          summaryValue,
+          summaryStatusValue,
           postId,
         ]
       );

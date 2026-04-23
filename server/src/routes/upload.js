@@ -33,11 +33,18 @@ const upload = multer({
   },
 });
 
-function uploadToCloudinary(buffer, mimetype) {
+function uploadToCloudinary(buffer, mimetype, originalname) {
   return new Promise((resolve, reject) => {
-    const resourceType = mimetype === 'application/pdf' ? 'raw' : 'image';
+    const isPdf = mimetype === 'application/pdf';
     const stream = cloudinary.uploader.upload_stream(
-      { resource_type: resourceType, folder: 'geofacts' },
+      {
+        resource_type: isPdf ? 'raw' : 'image',
+        folder: 'geofacts',
+        // Bewaart de originele bestandsnaam (incl. .pdf extensie) zodat
+        // Cloudinary het juiste Content-Type kan bepalen
+        use_filename: true,
+        unique_filename: true,
+      },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
@@ -72,7 +79,7 @@ router.post('/', auth, (req, res, next) => {
     }
 
     const { buffer, mimetype, originalname, size } = req.file;
-    const result = await uploadToCloudinary(buffer, mimetype);
+    const result = await uploadToCloudinary(buffer, mimetype, originalname);
 
     res.json({
       url: result.secure_url,

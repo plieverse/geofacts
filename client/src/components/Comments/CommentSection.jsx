@@ -124,7 +124,7 @@ function CommentItem({ postId, comment, onUpdate }) {
       <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-xs flex-shrink-0 mt-0.5">
         {comment.first_name?.[0]?.toUpperCase()}
       </div>
-      <div className="flex-1 bg-bg rounded-lg px-3 py-2">
+      <div className="flex-1 min-w-0 bg-bg rounded-lg px-3 py-2">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-text-primary text-xs font-semibold">{comment.first_name}</span>
           <span className="text-text-secondary text-xs">{timeAgo(comment.created_at)}</span>

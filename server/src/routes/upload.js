@@ -35,9 +35,8 @@ const upload = multer({
 
 function uploadToCloudinary(buffer, mimetype) {
   return new Promise((resolve, reject) => {
-    const resourceType = mimetype === 'application/pdf' ? 'raw' : 'image';
     const stream = cloudinary.uploader.upload_stream(
-      { resource_type: resourceType, folder: 'geofacts' },
+      { resource_type: 'image', folder: 'geofacts' },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);

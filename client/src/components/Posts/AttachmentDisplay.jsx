@@ -1,21 +1,11 @@
 import React from 'react';
 import { FileText, ExternalLink } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
-
 function formatSize(bytes) {
   if (!bytes) return '';
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
-
-function getViewUrl(file) {
-  // Stuur PDF's via de server-proxy zodat ze inline openen i.p.v. downloaden
-  if (file.fileType === 'application/pdf' && file.url) {
-    return `${API_URL}/api/view-file?url=${encodeURIComponent(file.url)}`;
-  }
-  return file.url;
 }
 
 export default function AttachmentDisplay({ attachments }) {
@@ -60,7 +50,7 @@ export default function AttachmentDisplay({ attachments }) {
       {files.map((file, i) => (
         <a
           key={i}
-          href={getViewUrl(file)}
+          href={file.url}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}

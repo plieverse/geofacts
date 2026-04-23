@@ -9,8 +9,11 @@ function formatSize(bytes) {
 }
 
 function getViewUrl(file) {
-  if (file.fileType === 'application/pdf') {
-    return `https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}`;
+  if (file.fileType === 'application/pdf' && file.url?.includes('cloudinary.com')) {
+    // fl_attachment:false instrueert Cloudinary de PDF inline te serveren (niet als download)
+    return file.url
+      .replace('/raw/upload/', '/raw/upload/fl_attachment:false/')
+      .replace('/image/upload/', '/image/upload/fl_attachment:false/');
   }
   return file.url;
 }

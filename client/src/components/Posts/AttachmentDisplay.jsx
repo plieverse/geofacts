@@ -8,6 +8,13 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function getViewUrl(file) {
+  if (file.fileType === 'application/pdf') {
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}`;
+  }
+  return file.url;
+}
+
 export default function AttachmentDisplay({ attachments }) {
   if (!attachments || attachments.length === 0) return null;
 
@@ -50,7 +57,7 @@ export default function AttachmentDisplay({ attachments }) {
       {files.map((file, i) => (
         <a
           key={i}
-          href={file.url}
+          href={getViewUrl(file)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}

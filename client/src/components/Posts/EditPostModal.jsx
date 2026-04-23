@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Link, Loader2, Sparkles, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import TopicSelector from './TopicSelector';
+import AttachmentUploader from './AttachmentUploader';
 
 export default function EditPostModal({ post, onClose, onUpdate }) {
   const [content, setContent] = useState(post.content || '');
@@ -15,6 +16,17 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
   const [selectedTopics, setSelectedTopics] = useState(post.topics?.map((t) => t.id) || []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Bijlagen — initialiseer vanuit bestaand bericht
+  const [attachments, setAttachments] = useState(
+    (post.attachments || []).map((a, i) => ({
+      id: `existing-${i}-${Date.now()}`,
+      localUrl: null,
+      status: 'done',
+      error: null,
+      ...a,
+    }))
+  );
 
   // Samenvatting — initialiseer vanuit bestaand bericht
   const [summary, setSummary] = useState(post.summary || '');
@@ -93,6 +105,10 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
     setSubmitting(true);
 
     try {
+      const doneAttachments = attachments
+        .filter((a) => a.status === 'done')
+        .map(({ url, publicId, filename, fileType, fileSize }) => ({ url, publicId, filename, fileType, fileSize }));
+
       await api.put(`/posts/${post.id}`, {
         content: content.trim(),
         linkUrl: linkUrl.trim() || null,
@@ -102,6 +118,7 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
         topicIds: selectedTopics,
         summary: summary.trim() || null,
         summaryIsManual,
+        attachments: doneAttachments,
       });
       const { data: fullPost } = await api.get(`/posts/${post.id}`);
       onUpdate?.(fullPost);
@@ -253,6 +270,9 @@ export default function EditPostModal({ post, onClose, onUpdate }) {
               </div>
             )}
           </div>
+
+          {/* Bijlagen */}
+          <AttachmentUploader attachments={attachments} onChange={setAttachments} />
 
           <TopicSelector selected={selectedTopics} onChange={setSelectedTopics} />
 

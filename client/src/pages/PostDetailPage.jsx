@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import AttachmentDisplay from '../components/Posts/AttachmentDisplay';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LikeButton from '../components/Timeline/LikeButton';
@@ -93,6 +94,11 @@ export default function PostDetailPage() {
             description={post.link_description}
             image={post.link_image}
           />
+        )}
+
+        {/* Bijlagen */}
+        {post.attachments?.length > 0 && (
+          <AttachmentDisplay attachments={post.attachments} />
         )}
 
         {/* Samenvatting */}

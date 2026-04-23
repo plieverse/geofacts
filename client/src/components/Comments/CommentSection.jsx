@@ -3,6 +3,7 @@ import { Loader2, Heart } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CommentForm from './CommentForm';
+import AttachmentDisplay from '../Posts/AttachmentDisplay';
 
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -101,7 +102,10 @@ export default function CommentSection({ postId }) {
                         />
                       </div>
                     </div>
-                    <p className="text-text-primary text-sm whitespace-pre-wrap">{c.content}</p>
+                    {c.content && (
+                      <p className="text-text-primary text-sm whitespace-pre-wrap">{c.content}</p>
+                    )}
+                    <AttachmentDisplay attachments={c.attachments} />
                   </div>
                 </div>
               ))}

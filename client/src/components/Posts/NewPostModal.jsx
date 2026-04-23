@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Link, Loader2, Sparkles, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import TopicSelector from './TopicSelector';
+import AttachmentUploader from './AttachmentUploader';
 
 export default function NewPostModal({ onClose, onCreated }) {
   const [content, setContent] = useState('');
@@ -13,6 +14,9 @@ export default function NewPostModal({ onClose, onCreated }) {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Bijlagen
+  const [attachments, setAttachments] = useState([]);
 
   // Samenvatting
   const [summary, setSummary] = useState('');
@@ -101,6 +105,10 @@ export default function NewPostModal({ onClose, onCreated }) {
     setSubmitting(true);
 
     try {
+      const doneAttachments = attachments
+        .filter((a) => a.status === 'done')
+        .map(({ url, publicId, filename, fileType, fileSize }) => ({ url, publicId, filename, fileType, fileSize }));
+
       const { data } = await api.post('/posts', {
         content: content.trim(),
         linkUrl: linkUrl.trim() || null,
@@ -110,6 +118,7 @@ export default function NewPostModal({ onClose, onCreated }) {
         topicIds: selectedTopics,
         summary: summary.trim() || null,
         summaryIsManual,
+        attachments: doneAttachments,
       });
       onCreated?.(data);
       onClose();
@@ -290,6 +299,9 @@ export default function NewPostModal({ onClose, onCreated }) {
               </div>
             )}
           </div>
+
+          {/* Bijlagen */}
+          <AttachmentUploader attachments={attachments} onChange={setAttachments} />
 
           {/* Topics */}
           <TopicSelector selected={selectedTopics} onChange={setSelectedTopics} />

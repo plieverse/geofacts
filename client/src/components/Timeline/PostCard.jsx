@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, Edit2, Trash2, MoreHorizontal, Pin, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import AttachmentDisplay from '../Posts/AttachmentDisplay';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LikeButton from './LikeButton';
@@ -145,6 +146,11 @@ export default function PostCard({ post, onDelete, onUpdate, onPin }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* Bijlagen */}
+        {post.attachments?.length > 0 && (
+          <AttachmentDisplay attachments={post.attachments} />
         )}
 
         {/* Actiebalk + onderwerpen */}

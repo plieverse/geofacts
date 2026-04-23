@@ -162,7 +162,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/posts
 router.post('/', auth, async (req, res) => {
   try {
-    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual } = req.body;
+    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual, attachments } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Inhoud is verplicht.' });
@@ -176,10 +176,11 @@ router.post('/', auth, async (req, res) => {
       const summaryStatusValue = summaryValue
         ? (summaryIsManual ? 'manual' : 'generated')
         : null;
+      const attachmentsValue = Array.isArray(attachments) ? JSON.stringify(attachments) : '[]';
 
       const { rows } = await client.query(
-        `INSERT INTO posts (user_id, content, link_url, link_title, link_description, link_image, summary, summary_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        `INSERT INTO posts (user_id, content, link_url, link_title, link_description, link_image, summary, summary_status, attachments)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
         [
           req.user.id,
           content.trim(),
@@ -189,6 +190,7 @@ router.post('/', auth, async (req, res) => {
           linkImage || null,
           summaryValue,
           summaryStatusValue,
+          attachmentsValue,
         ]
       );
 
@@ -225,7 +227,7 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual } = req.body;
+    const { content, linkUrl, linkTitle, linkDescription, linkImage, topicIds, summary, summaryIsManual, attachments } = req.body;
 
     // Check ownership (or admin)
     const { rows: existing } = await db.query('SELECT * FROM posts WHERE id = $1', [postId]);
@@ -246,11 +248,14 @@ router.put('/:id', auth, async (req, res) => {
         : summary !== undefined && summary.trim()
           ? (summaryIsManual ? 'manual' : 'generated')
           : existing[0].summary_status;
+      const attachmentsValue = Array.isArray(attachments)
+        ? JSON.stringify(attachments)
+        : JSON.stringify(existing[0].attachments || []);
 
       const { rows } = await client.query(
         `UPDATE posts SET content = $1, link_url = $2, link_title = $3, link_description = $4, link_image = $5,
-         summary = $6, summary_status = $7, updated_at = NOW()
-         WHERE id = $8 RETURNING *`,
+         summary = $6, summary_status = $7, attachments = $8, updated_at = NOW()
+         WHERE id = $9 RETURNING *`,
         [
           content || existing[0].content,
           linkUrl !== undefined ? linkUrl : existing[0].link_url,
@@ -259,6 +264,7 @@ router.put('/:id', auth, async (req, res) => {
           linkImage !== undefined ? linkImage : existing[0].link_image,
           summaryValue,
           summaryStatusValue,
+          attachmentsValue,
           postId,
         ]
       );

@@ -50,18 +50,23 @@ router.get('/', async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    const { content } = req.body;
+    const { content, attachments } = req.body;
 
-    if (!content || !content.trim()) {
+    const hasContent = content && content.trim();
+    const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+
+    if (!hasContent && !hasAttachments) {
       return res.status(400).json({ error: 'Reactie mag niet leeg zijn.' });
     }
 
     const { rows: postRows } = await db.query('SELECT id FROM posts WHERE id = $1', [postId]);
     if (!postRows.length) return res.status(404).json({ error: 'Bericht niet gevonden.' });
 
+    const attachmentsValue = hasAttachments ? JSON.stringify(attachments) : '[]';
+
     const { rows } = await db.query(
-      `INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING *`,
-      [postId, req.user.id, content.trim()]
+      `INSERT INTO comments (post_id, user_id, content, attachments) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [postId, req.user.id, hasContent ? content.trim() : '', attachmentsValue]
     );
 
     const comment = rows[0];
@@ -69,6 +74,7 @@ router.post('/', auth, async (req, res) => {
     comment.first_name = userRows[0]?.first_name;
     comment.like_count = 0;
     comment.user_liked = false;
+    comment.attachments = attachments || [];
 
     createCommentNotification(postId, req.user.id).catch(console.error);
 

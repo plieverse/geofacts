@@ -85,6 +85,32 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// PUT /api/posts/:id/comments/:commentId
+router.put('/:commentId', auth, async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.commentId);
+    const { content } = req.body;
+
+    const { rows: existing } = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+    if (!existing.length) return res.status(404).json({ error: 'Reactie niet gevonden.' });
+    if (existing[0].user_id !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Geen toegang om deze reactie te bewerken.' });
+    }
+
+    const newContent = content && content.trim() ? content.trim() : existing[0].content;
+    const { rows } = await db.query(
+      `UPDATE comments SET content = $1 WHERE id = $2 RETURNING *`,
+      [newContent, commentId]
+    );
+
+    const { rows: userRows } = await db.query('SELECT first_name FROM users WHERE id = $1', [existing[0].user_id]);
+    res.json({ ...rows[0], first_name: userRows[0]?.first_name });
+  } catch (err) {
+    console.error('PUT comment error:', err);
+    res.status(500).json({ error: 'Reactie bewerken mislukt.' });
+  }
+});
+
 // POST /api/posts/:id/comments/:commentId/like  (toggle, postId niet gebruikt maar nodig voor routing)
 router.post('/:commentId/like', auth, async (req, res) => {
   try {

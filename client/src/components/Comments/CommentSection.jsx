@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CommentForm from './CommentForm';
 import AttachmentDisplay from '../Posts/AttachmentDisplay';
+import AttachmentUploader from '../Posts/AttachmentUploader';
 
 function timeAgo(dateStr) {
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -63,6 +64,7 @@ function CommentItem({ postId, comment, onUpdate }) {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content || '');
+  const [editAttachments, setEditAttachments] = useState([]);
   const [saving, setSaving] = useState(false);
   const textareaRef = useRef(null);
 
@@ -70,6 +72,15 @@ function CommentItem({ postId, comment, onUpdate }) {
 
   function startEdit() {
     setEditContent(comment.content || '');
+    setEditAttachments(
+      (comment.attachments || []).map((a, i) => ({
+        id: `existing-${i}-${Date.now()}`,
+        localUrl: null,
+        status: 'done',
+        error: null,
+        ...a,
+      }))
+    );
     setEditing(true);
     setTimeout(() => textareaRef.current?.focus(), 0);
   }
@@ -77,16 +88,22 @@ function CommentItem({ postId, comment, onUpdate }) {
   function cancelEdit() {
     setEditing(false);
     setEditContent(comment.content || '');
+    setEditAttachments([]);
   }
 
   async function handleSave() {
     if (saving) return;
     setSaving(true);
     try {
+      const doneAttachments = editAttachments
+        .filter((a) => a.status === 'done')
+        .map(({ url, publicId, filename, fileType, fileSize }) => ({ url, publicId, filename, fileType, fileSize }));
+
       const { data } = await api.put(`/posts/${postId}/comments/${comment.id}`, {
         content: editContent,
+        attachments: doneAttachments,
       });
-      onUpdate({ ...comment, content: data.content });
+      onUpdate({ ...comment, content: data.content, attachments: data.attachments });
       setEditing(false);
     } catch (err) {
       alert(err.response?.data?.error || 'Bewerken mislukt.');
@@ -99,6 +116,8 @@ function CommentItem({ postId, comment, onUpdate }) {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSave();
     if (e.key === 'Escape') cancelEdit();
   }
+
+  const uploading = editAttachments.some((a) => a.status === 'uploading');
 
   return (
     <div className="flex gap-2">
@@ -138,10 +157,11 @@ function CommentItem({ postId, comment, onUpdate }) {
               className="input resize-none text-sm w-full py-1.5 min-h-[60px]"
               maxLength={1000}
             />
+            <AttachmentUploader attachments={editAttachments} onChange={setEditAttachments} />
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSave}
-                disabled={saving || (!editContent.trim() && !comment.attachments?.length)}
+                disabled={saving || uploading || (!editContent.trim() && editAttachments.filter(a => a.status === 'done').length === 0)}
                 className="flex items-center gap-1 text-xs text-accent hover:text-accent-light transition-colors disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}

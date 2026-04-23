@@ -1,6 +1,13 @@
 import React from 'react';
 import { FileText, ExternalLink } from 'lucide-react';
 
+function getViewUrl(file) {
+  if (file.fileType === 'application/pdf' && file.url) {
+    return `/api/view-file?url=${encodeURIComponent(file.url)}`;
+  }
+  return file.url;
+}
+
 function formatSize(bytes) {
   if (!bytes) return '';
   if (bytes < 1024) return bytes + ' B';
@@ -50,7 +57,7 @@ export default function AttachmentDisplay({ attachments }) {
       {files.map((file, i) => (
         <a
           key={i}
-          href={file.url}
+          href={getViewUrl(file)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}

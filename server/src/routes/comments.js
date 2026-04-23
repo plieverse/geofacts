@@ -115,6 +115,25 @@ router.put('/:commentId', auth, async (req, res) => {
   }
 });
 
+// DELETE /api/posts/:id/comments/:commentId
+router.delete('/:commentId', auth, async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.commentId);
+
+    const { rows: existing } = await db.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+    if (!existing.length) return res.status(404).json({ error: 'Reactie niet gevonden.' });
+    if (existing[0].user_id !== req.user.id && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Geen toegang om deze reactie te verwijderen.' });
+    }
+
+    await db.query('DELETE FROM comments WHERE id = $1', [commentId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE comment error:', err);
+    res.status(500).json({ error: 'Reactie verwijderen mislukt.' });
+  }
+});
+
 // POST /api/posts/:id/comments/:commentId/like  (toggle, postId niet gebruikt maar nodig voor routing)
 router.post('/:commentId/like', auth, async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Heart, Edit2, Check, X } from 'lucide-react';
+import { Loader2, Heart, Edit2, Check, X, Trash2 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CommentForm from './CommentForm';
@@ -60,9 +60,11 @@ function CommentLikeButton({ postId, commentId, initialLiked, initialCount }) {
   );
 }
 
-function CommentItem({ postId, comment, onUpdate }) {
+function CommentItem({ postId, comment, onUpdate, onDelete }) {
   const { user } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editContent, setEditContent] = useState(comment.content || '');
   const [editAttachments, setEditAttachments] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -89,6 +91,20 @@ function CommentItem({ postId, comment, onUpdate }) {
     setEditing(false);
     setEditContent(comment.content || '');
     setEditAttachments([]);
+  }
+
+  async function handleDelete() {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/posts/${postId}/comments/${comment.id}`);
+      onDelete(comment.id);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Verwijderen mislukt.');
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function handleSave() {
@@ -129,14 +145,23 @@ function CommentItem({ postId, comment, onUpdate }) {
           <span className="text-text-primary text-xs font-semibold">{comment.first_name}</span>
           <span className="text-text-secondary text-xs">{timeAgo(comment.created_at)}</span>
           <div className="ml-auto flex items-center gap-2">
-            {canEdit && !editing && (
-              <button
-                onClick={startEdit}
-                className="text-text-secondary hover:text-accent transition-colors opacity-0 group-hover:opacity-100"
-                title="Bewerken"
-              >
-                <Edit2 className="w-3 h-3" />
-              </button>
+            {canEdit && !editing && !confirmDelete && (
+              <>
+                <button
+                  onClick={startEdit}
+                  className="text-text-secondary hover:text-accent transition-colors opacity-0 group-hover:opacity-100"
+                  title="Bewerken"
+                >
+                  <Edit2 className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-text-secondary hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                  title="Verwijderen"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </>
             )}
             <CommentLikeButton
               postId={postId}
@@ -176,6 +201,24 @@ function CommentItem({ postId, comment, onUpdate }) {
               </button>
             </div>
           </div>
+        ) : confirmDelete ? (
+          <div className="flex items-center gap-3 py-0.5">
+            <p className="text-xs text-text-secondary">Reactie verwijderen?</p>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1 text-xs text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
+            >
+              {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              Verwijderen
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            >
+              Annuleren
+            </button>
+          </div>
         ) : (
           <>
             {comment.content && (
@@ -208,6 +251,10 @@ export default function CommentSection({ postId }) {
     setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
   }
 
+  function handleCommentDeleted(id) {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+  }
+
   return (
     <div className="mt-4 pt-3 border-t border-divider">
       {loading ? (
@@ -224,6 +271,7 @@ export default function CommentSection({ postId }) {
                     postId={postId}
                     comment={c}
                     onUpdate={handleCommentUpdated}
+                    onDelete={handleCommentDeleted}
                   />
                 </div>
               ))}

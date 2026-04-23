@@ -1,6 +1,8 @@
 import React from 'react';
 import { FileText, ExternalLink } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function formatSize(bytes) {
   if (!bytes) return '';
   if (bytes < 1024) return bytes + ' B';
@@ -9,11 +11,9 @@ function formatSize(bytes) {
 }
 
 function getViewUrl(file) {
-  if (file.fileType === 'application/pdf' && file.url?.includes('cloudinary.com')) {
-    // fl_attachment:false instrueert Cloudinary de PDF inline te serveren (niet als download)
-    return file.url
-      .replace('/raw/upload/', '/raw/upload/fl_attachment:false/')
-      .replace('/image/upload/', '/image/upload/fl_attachment:false/');
+  // Stuur PDF's via de server-proxy zodat ze inline openen i.p.v. downloaden
+  if (file.fileType === 'application/pdf' && file.url) {
+    return `${API_URL}/api/view-file?url=${encodeURIComponent(file.url)}`;
   }
   return file.url;
 }
